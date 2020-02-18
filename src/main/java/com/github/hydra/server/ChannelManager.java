@@ -49,7 +49,7 @@ public class ChannelManager {
 
     public static void removeChannel(final Channel channel) {
 
-        unSubscribe(channel);
+        unSubscribeAll(channel);
         sessionCount.decrementAndGet();
     }
 
@@ -95,14 +95,42 @@ public class ChannelManager {
     }
 
 
-    public static boolean unSubscribe(final Channel channel) {
+    public static boolean unSubscribeAll(final Channel channel) {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.remove(id);
-        if (subscribeBox == null || subscribeBox.uid == null) {
+        if (subscribeBox == null) {
             return true;
         }
-        userChannel.remove(buildUidAndChannelId(subscribeBox.uid, id));
+        subscribeBox.topics.forEach(s -> {
+
+            ChannelGroup channelGroup = nameSpace.get(s);
+            if (channelGroup != null) {
+                channelGroup.remove(channel);
+            }
+        });
+        if (subscribeBox.uid != null) {
+            userChannel.remove(buildUidAndChannelId(subscribeBox.uid, id));
+        }
+        return true;
+    }
+
+
+    public static boolean unSubscribeTopics(final Channel channel, Set<String> names) {
+
+        String id = channel.id().asLongText();
+        SubscribeBox subscribeBox = subscribeMap.get(id);
+        if (subscribeBox == null) {
+            return true;
+        }
+        subscribeBox.topics.removeAll(names);
+        names.forEach(s -> {
+
+            ChannelGroup channelGroup = nameSpace.get(s);
+            if (channelGroup != null) {
+                channelGroup.remove(channel);
+            }
+        });
         return true;
     }
 

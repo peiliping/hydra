@@ -29,7 +29,7 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             if (Command.SUBSCRIBE.equals(command.type)) {
                 result.success = ChannelManager.subscribe(ctx.channel(), command.topics, command.uid);
             } else if (Command.UNSUBSCRIBE.equals(command.type)) {
-                result.success = ChannelManager.unSubscribe(ctx.channel());
+                result.success = ChannelManager.unSubscribeTopics(ctx.channel(), command.topics);
             }
             ctx.channel().writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(result)));
         } catch (Throwable e) {
