@@ -29,6 +29,8 @@ public class CMD {
 
     static final Option PARSERESULT = Option.builder().longOpt("parseResult").hasArg(false).required(false).desc("解析server返回结果").build();
 
+    static final Option UNGZIP = Option.builder().longOpt("ungzip").hasArg(false).required(false).desc("binary ungzip").build();
+
 
     static final Option SSL = Option.builder().longOpt("ssl").hasArg(false).required(false).desc("使用ssl").build();
 
@@ -41,7 +43,7 @@ public class CMD {
     static {
         OPTIONS.addOption(HELP).addOption(LOGLEVEL)
                 .addOption(CONNECTIONS).addOption(CONNECTINTERVAL)
-                .addOption(SUBSCRIBE).addOption(HEARTBEAT).addOption(PARSERESULT)
+                .addOption(SUBSCRIBE).addOption(HEARTBEAT).addOption(PARSERESULT).addOption(UNGZIP)
                 .addOption(SSL).addOption(HOST).addOption(PORT).addOption(PATH);
     }
 

@@ -23,4 +23,5 @@ public class ClientConfig {
 
     private boolean parseResult;
 
+    private boolean unCompressGzip;
 }

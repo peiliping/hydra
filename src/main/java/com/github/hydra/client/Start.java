@@ -52,6 +52,7 @@ public class Start {
                     .port(getValue(commandLine, PORT, Integer::parseInt, 8000))
                     .path(getValue(commandLine, PATH, s -> s, "/"))
                     .parseResult(hasOption(commandLine, PARSERESULT))
+                    .unCompressGzip(hasOption(commandLine, UNGZIP))
                     .build();
             log.info(clientConfig.toString());
 

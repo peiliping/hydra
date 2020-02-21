@@ -82,7 +82,7 @@ public class NettyClient {
                         .build();
                 cp.addLast("ws-protocol", new WebSocketClientProtocolHandler(protocolConfig));
                 cp.addLast("ws-text", new TextFrameHandler(config.isParseResult()));
-                cp.addLast("ws-binary", new BinaryFrameHandler());
+                cp.addLast("ws-binary", new BinaryFrameHandler(config.isUnCompressGzip()));
             }
         });
     }
