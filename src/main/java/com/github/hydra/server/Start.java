@@ -1,24 +1,26 @@
 package com.github.hydra.server;
 
 
-import com.alibaba.fastjson.JSON;
-import com.github.hydra.constant.Command;
-import com.github.hydra.constant.Result;
 import com.github.hydra.constant.Util;
-import com.github.hydra.constant.WebSocketSchema;
-import com.google.common.collect.Sets;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.Validate;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.hydra.constant.CMDUtil.getValue;
+import static com.github.hydra.constant.CMDUtil.hasOption;
 import static com.github.hydra.server.CMD.*;
 
 
 @Slf4j
 public class Start {
+
+
+    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(1);
 
 
     public static void main(String[] args) {
@@ -31,87 +33,29 @@ public class Start {
 
             Util.updateLogLevel(getValue(commandLine, LOGLEVEL, s -> s, "INFO"));
 
-            printCMD();
+            new Producer(getValue(commandLine, REDIS_ADDRESS, s -> s, "redis://127.0.0.1:6379"),
+                         getValue(commandLine, REDIS_PWD, s -> s, null),
+                         getValue(commandLine, REDIS_DBNUM, Integer::parseInt, 0),
+                         getValue(commandLine, REDIS_TOPIC, s -> s, "hydra")).start();
 
-            final long pushInterval = getValue(commandLine, PUSHINTERVAL, Long::parseLong, 1000L);
-            log.info("pushInterval {} .", pushInterval);
+            final int monitorInterval = getValue(commandLine, MONITOR_INTERVAL, Integer::parseInt, 10);
+            log.info("monitorInterval {} .", monitorInterval);
+            final boolean checkIdle = hasOption(commandLine, CHECK_IDLE);
+            log.info("checkIdle {} .", checkIdle);
 
-            new Thread(() -> {
-
-                while (true) {
-                    Util.sleepSec(10);
-                    ChannelManager.printLog();
-                }
-            }).start();
-
-            new Thread(() -> {
-                while (true) {
-                    Result r = new Result();
-                    r.timestamp = Util.nowMS();
-                    r.success = true;
-                    TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(r));
-                    ChannelManager.broadCastInNameSpace(Util.DEMO_NAMESPACE, frame);
-                    Util.sleepMS(pushInterval);
-                }
-            }).start();
-
-            new Thread(() -> {
-                while (true) {
-                    Result r = new Result();
-                    r.timestamp = Util.nowMS();
-                    r.success = true;
-                    ChannelManager.broadCast4User(Util.DEMO_UID, JSON.toJSONString(r));
-                    Util.sleepMS(pushInterval);
-                }
-            }).start();
+            timer.scheduleAtFixedRate(() -> ChannelManager.monitorLog(checkIdle), monitorInterval, monitorInterval, TimeUnit.SECONDS);
 
             final ServerConfig serverConfig = ServerConfig.builder()
-                    .schema(hasOption(commandLine, SSL) ? WebSocketSchema.WSS : WebSocketSchema.WS)
                     .host(getValue(commandLine, HOST, s -> s, "127.0.0.1"))
                     .port(getValue(commandLine, PORT, Integer::parseInt, 8000))
-                    .path(getValue(commandLine, PATH, s -> s, "/"))
-                    .build();
-            log.info(serverConfig.toString());
+                    .path(getValue(commandLine, PATH, s -> s, "/")).build();
+            log.info("Server Config : {} .", serverConfig.toString());
 
             new NettyServer(serverConfig).start();
-        } catch (ParseException e) {
+        } catch (Throwable e) {
             log.error("Server Start Error : ", e);
+            Validate.isTrue(false);
+            System.exit(0);
         }
     }
-
-
-    private static void printCMD() {
-
-        Command commandSub = new Command();
-        commandSub.type = Command.SUBSCRIBE;
-        commandSub.topics = Sets.newHashSet(Util.DEMO_NAMESPACE);
-        commandSub.uid = Util.DEMO_UID;
-        log.info(JSON.toJSONString(commandSub));
-        Command commandUnSub = new Command();
-        commandUnSub.type = Command.UNSUBSCRIBE;
-        log.info(JSON.toJSONString(commandUnSub));
-    }
-
-
-    private static <V> V getValue(CommandLine commandLine, Option option, Convert<V> convert, V defaultValue) {
-
-        if (commandLine.hasOption(option.getLongOpt())) {
-            return convert.eval(commandLine.getOptionValue(option.getLongOpt()));
-        }
-        return defaultValue;
-    }
-
-
-    public static boolean hasOption(CommandLine commandLine, Option option) {
-
-        return commandLine.hasOption(option.getLongOpt());
-    }
-
-
-    interface Convert<V> {
-
-
-        V eval(String s);
-    }
-
 }

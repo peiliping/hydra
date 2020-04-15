@@ -30,17 +30,24 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
 
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, BinaryWebSocketFrame msg) throws InterruptedException {
+    protected void channelRead0(ChannelHandlerContext ctx, BinaryWebSocketFrame msg) {
 
         if (log.isDebugEnabled()) {
             log.debug("binary data length : {} ", msg.content().capacity());
-            ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
-            log.debug(unCompressGzip(byteBuf.array()));
+            if (this.unCompressGzip) {
+                ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
+                log.debug(unCompressGzip(byteBuf.array()));
+            }
         }
-        this.box = (this.box == null ? ChannelManager.getChannelBox(ctx.channel()) : this.box);
-        if (this.box != null) {
-            box.lastTimestamp = Util.nowMS();
+
+        if (this.box == null) {
+            this.box = ChannelManager.getChannelBox(ctx.channel());
+            if (this.box == null) {
+                return;
+            }
         }
+
+        this.box.lastTimestamp = Util.nowMS();
     }
 
 

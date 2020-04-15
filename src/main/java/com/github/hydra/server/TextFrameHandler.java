@@ -2,14 +2,20 @@ package com.github.hydra.server;
 
 
 import com.alibaba.fastjson.JSON;
-import com.github.hydra.constant.Command;
-import com.github.hydra.constant.Result;
-import com.github.hydra.constant.Util;
+import com.github.hydra.server.data.Answer;
+import com.github.hydra.server.data.BizType;
+import com.github.hydra.server.data.Command;
+import com.github.hydra.server.data.MsgType;
+import com.google.common.collect.Sets;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Validate;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -23,18 +29,41 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             if (log.isDebugEnabled()) {
                 log.debug("content : " + message);
             }
-            Result result = new Result();
-            result.timestamp = Util.nowMS();
-            Command command = JSON.parseObject(message, Command.class);
-            if (Command.SUBSCRIBE.equals(command.type)) {
-                result.success = ChannelManager.subscribe(ctx.channel(), command.topics, command.uid);
-            } else if (Command.UNSUBSCRIBE.equals(command.type)) {
-                result.success = ChannelManager.unSubscribeTopics(ctx.channel(), command.topics);
+
+            Command cmd = JSON.parseObject(message, Command.class);
+
+            if (Command.PING.equals(cmd.getEvent())) {
+                ChannelManager.heartBeat(ctx.channel());
+                sendAnswer(ctx, Answer.builder().event(Command.PONG).build());
+                return;
             }
-            ctx.channel().writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(result)));
+
+            Validate.notNull(BizType.of(cmd.getBiz()));
+            Validate.notNull(MsgType.of(cmd.getType()));
+
+            if (cmd.getTopics() == null) {
+                cmd.setTopics(Sets.newHashSet());
+            }
+            Set<String> keys = cmd.getTopics().stream().map(s -> Producer.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
+
+            if (Command.SUBSCRIBE.equals(cmd.getEvent())) {
+                String uid = null; //cmd.getToken() to uid;
+                ChannelManager.subscribe(ctx.channel(), keys, uid);
+            } else if (Command.UNSUBSCRIBE.equals(cmd.getEvent())) {
+                ChannelManager.unSubscribeTopics(ctx.channel(), keys);
+            } else {
+                return;
+            }
+            sendAnswer(ctx, Answer.builder().event(cmd.getEvent()).biz(cmd.getBiz()).type(cmd.getType()).topics(cmd.getTopics()).build());
         } catch (Throwable e) {
-            log.error("error : ", e);
+            log.error("textFrameHandler error : ", e);
         }
+    }
+
+
+    private void sendAnswer(ChannelHandlerContext ctx, Answer answer) {
+
+        ctx.channel().writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(answer)));
     }
 
 

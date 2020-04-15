@@ -1,6 +1,7 @@
 package com.github.hydra.server;
 
 
+import com.github.hydra.constant.Util;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.netty.channel.Channel;
@@ -14,11 +15,13 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Validate;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 @Slf4j
@@ -35,14 +38,17 @@ public class ChannelManager {
 
     private static final AtomicInteger sessionCount = new AtomicInteger(0);
 
+    private static final AtomicLong broadcastCount = new AtomicLong(0L);
+
     private static final ChannelFutureListener listener = future -> removeChannel(future.channel());
 
 
     public static void addChannel(final Channel channel) {
 
         if (globalGroup.add(channel)) {
-            channel.closeFuture().addListener(listener);
+            subscribeMap.putIfAbsent(channel.id().asLongText(), new SubscribeBox(channel));
             sessionCount.incrementAndGet();
+            channel.closeFuture().addListener(listener);
         }
     }
 
@@ -54,27 +60,44 @@ public class ChannelManager {
     }
 
 
-    public static boolean subscribe(final Channel channel, Set<String> names, String uid) {
+    public static void heartBeat(final Channel channel) {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.get(id);
         if (subscribeBox == null) {
-            subscribeBox = new SubscribeBox();
-            subscribeBox.channel = channel;
-            subscribeBox.topics = Sets.newConcurrentHashSet(names);
-            subscribeBox.uid = uid;
-
-
-            SubscribeBox subscribeBoxOld = subscribeMap.putIfAbsent(id, subscribeBox);
-            if (subscribeBoxOld != null) {
-                subscribeBox = subscribeBoxOld;
-                checkEqual(uid, subscribeBox.uid);
-                subscribeBox.topics.addAll(names);
-            }
-        } else {
-            checkEqual(uid, subscribeBox.uid);
-            subscribeBox.topics.addAll(names);
+            return;
         }
+
+        if (!subscribeBox.open) {
+            return;
+        }
+
+        subscribeBox.lastHeartBeatTime = Util.nowMS();
+    }
+
+
+    public static void subscribe(final Channel channel, Set<String> names, String uid) {
+
+        String id = channel.id().asLongText();
+        SubscribeBox subscribeBox = subscribeMap.get(id);
+
+        if (subscribeBox == null) {
+            log.error("it is not normal .");
+            subscribeBox = new SubscribeBox(channel);
+            SubscribeBox old = subscribeMap.putIfAbsent(id, subscribeBox);
+            if (old != null) {
+                log.error("it is not normal concurrent .");
+                subscribeBox = old;
+            }
+        }
+
+        if (!subscribeBox.open) {
+            return;
+        }
+
+        Validate.isTrue(subscribeBox.addChannel(channel));
+        Validate.isTrue(subscribeBox.addUid(uid));
+        subscribeBox.topics.addAll(names);
 
         names.forEach(s -> {
             ChannelGroup channelGroup = nameSpace.get(s);
@@ -91,16 +114,15 @@ public class ChannelManager {
         if (uid != null) {
             userChannel.put(buildUidAndChannelId(uid, id), id);
         }
-        return true;
     }
 
 
-    public static boolean unSubscribeAll(final Channel channel) {
+    public static void unSubscribeAll(final Channel channel) {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.remove(id);
         if (subscribeBox == null) {
-            return true;
+            return;
         }
         subscribeBox.topics.forEach(s -> {
 
@@ -112,17 +134,21 @@ public class ChannelManager {
         if (subscribeBox.uid != null) {
             userChannel.remove(buildUidAndChannelId(subscribeBox.uid, id));
         }
-        return true;
     }
 
 
-    public static boolean unSubscribeTopics(final Channel channel, Set<String> names) {
+    public static void unSubscribeTopics(final Channel channel, Set<String> names) {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.get(id);
         if (subscribeBox == null) {
-            return true;
+            return;
         }
+
+        if (!subscribeBox.open) {
+            return;
+        }
+
         subscribeBox.topics.removeAll(names);
         names.forEach(s -> {
 
@@ -131,7 +157,6 @@ public class ChannelManager {
                 channelGroup.remove(channel);
             }
         });
-        return true;
     }
 
 
@@ -140,6 +165,7 @@ public class ChannelManager {
         ChannelGroup channelGroup = nameSpace.get(name);
         if (channelGroup != null) {
             channelGroup.writeAndFlush(tws, ChannelMatchers.all(), true);
+            broadcastCount.incrementAndGet();
         }
     }
 
@@ -169,30 +195,74 @@ public class ChannelManager {
     }
 
 
-    private static void checkEqual(Object a, Object b) {
+    public static void monitorLog(boolean checkIdle) {
 
-        if (a == null) {
-            Validate.isTrue(a == b);
-        } else {
-            Validate.isTrue(a.equals(b));
+        int expiredSession = 0;
+        if (checkIdle) {
+            long now = Util.nowMS();
+            Iterator<Map.Entry<String, SubscribeBox>> it = subscribeMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, SubscribeBox> entry = it.next();
+                SubscribeBox box = entry.getValue();
+                if (box.open) {
+                    if ((now - box.lastHeartBeatTime) >= Util.SEC_45) {
+                        box.open = false;
+                    }
+                } else {
+                    if ((now - box.lastHeartBeatTime) >= Util.MIN_1) {
+                        expiredSession++;
+                        if (entry.getValue().channel != null) {
+                            entry.getValue().channel.close();
+                        }
+                    }
+                }
+            }
         }
-    }
-
-
-    public static void printLog() {
-
-        log.info("session count : {} , subscribe count : {} , namespace count : {} , user session count : {} ",
-                 sessionCount.get(), subscribeMap.size(), nameSpace.size(), userChannel.size());
+        log.info("session : {} , subscribe : {} , namespace : {} , user session : {} , expired session : {} , broadcast : {}",
+                 sessionCount.get(), subscribeMap.size(), nameSpace.size(), userChannel.size(), expiredSession, broadcastCount.get());
     }
 
 
     static class SubscribeBox {
 
 
+        public boolean open;
+
         public Channel channel;
 
         public Set<String> topics;
 
         public String uid;
+
+        public long lastHeartBeatTime;
+
+
+        public SubscribeBox(Channel c) {
+
+            this.open = true;
+            this.channel = c;
+            this.topics = Sets.newHashSet();
+            this.lastHeartBeatTime = Util.nowMS();
+        }
+
+
+        public boolean addChannel(Channel c) {
+
+            if (this.channel == null) {
+                this.channel = c;
+                return true;
+            }
+            return this.channel == c;
+        }
+
+
+        public boolean addUid(String uid) {
+
+            if (this.uid == null) {
+                this.uid = uid;
+                return true;
+            }
+            return this.uid.equals(uid);
+        }
     }
 }

@@ -2,7 +2,7 @@ package com.github.hydra.client;
 
 
 import com.alibaba.fastjson.JSON;
-import com.github.hydra.constant.Result;
+import com.alibaba.fastjson.JSONObject;
 import com.github.hydra.constant.Util;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -16,29 +16,38 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
 
     private ChannelManager.ChannelBox box;
 
-    private boolean parseResult;
+    private boolean checkDelay;
 
 
-    public TextFrameHandler(boolean parseResult) {
+    public TextFrameHandler(boolean checkDelay) {
 
         super();
-        this.parseResult = parseResult;
+        this.checkDelay = checkDelay;
     }
 
 
-    @Override protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
+    @Override protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
 
         if (log.isDebugEnabled()) {
             log.debug("content : " + msg.text());
         }
 
-        this.box = (this.box == null ? ChannelManager.getChannelBox(ctx.channel()) : this.box);
-        if (this.box != null) {
-            box.lastTimestamp = Util.nowMS();
-            if (this.parseResult) {
-                Result result = JSON.parseObject(msg.text(), Result.class);
-                box.delay = box.lastTimestamp - result.timestamp;
+        if (this.box == null) {
+            this.box = ChannelManager.getChannelBox(ctx.channel());
+            if (this.box == null) {
+                return;
             }
+        }
+
+        this.box.lastTimestamp = Util.nowMS();
+        if (!this.checkDelay) {
+            return;
+        }
+
+        JSONObject result = JSON.parseObject(msg.text());
+        Long timestamp = result.getLong("ts");
+        if (timestamp != null) {
+            this.box.delay = this.box.lastTimestamp - timestamp;
         }
     }
 

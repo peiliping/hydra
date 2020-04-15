@@ -16,18 +16,18 @@ public class CMD {
 
     static final Option HELP = Option.builder().longOpt("help").hasArg(false).required(false).desc("help").build();
 
-    static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger级别").build();
+    static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger level").build();
 
 
     static final Option CONNECTIONS = Option.builder().longOpt("connections").hasArg(true).required(false).desc("连接数").build();
 
-    static final Option CONNECTINTERVAL = Option.builder().longOpt("connectInterval").hasArg(true).required(false).desc("connect间隔").build();
+    static final Option CONNECTINTERVAL = Option.builder().longOpt("connectInterval").hasArg(true).required(false).desc("connect的间隔时间").build();
 
     static final Option SUBSCRIBE = Option.builder().longOpt("subscribe").hasArg(true).required(false).desc("订阅请求的字符串").build();
 
     static final Option HEARTBEAT = Option.builder().longOpt("heartBeat").hasArg(true).required(false).desc("发送心跳包的字符串,时间戳用%s占位").build();
 
-    static final Option PARSERESULT = Option.builder().longOpt("parseResult").hasArg(false).required(false).desc("解析server返回结果").build();
+    static final Option CHECKDELAY = Option.builder().longOpt("checkDelay").hasArg(false).required(false).desc("解析返回结果中的时间戳,计算延迟").build();
 
     static final Option UNGZIP = Option.builder().longOpt("ungzip").hasArg(false).required(false).desc("binary ungzip").build();
 
@@ -43,7 +43,7 @@ public class CMD {
     static {
         OPTIONS.addOption(HELP).addOption(LOGLEVEL)
                 .addOption(CONNECTIONS).addOption(CONNECTINTERVAL)
-                .addOption(SUBSCRIBE).addOption(HEARTBEAT).addOption(PARSERESULT).addOption(UNGZIP)
+                .addOption(SUBSCRIBE).addOption(HEARTBEAT).addOption(CHECKDELAY).addOption(UNGZIP)
                 .addOption(SSL).addOption(HOST).addOption(PORT).addOption(PATH);
     }
 

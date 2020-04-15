@@ -6,14 +6,21 @@ import com.github.hydra.constant.WebSocketSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.ParseException;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.github.hydra.client.CMD.*;
+import static com.github.hydra.constant.CMDUtil.getValue;
+import static com.github.hydra.constant.CMDUtil.hasOption;
 
 
 @Slf4j
 public class Start {
+
+
+    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(1);
 
 
     public static void main(String[] args) {
@@ -39,19 +46,15 @@ public class Start {
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
             log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
 
-            new Thread(() -> {
-                while (true) {
-                    Util.sleepSec(10);
-                    ChannelManager.scan(1000L, subscribe, subscribeString, heartBeat, heartBeatString);
-                }
-            }).start();
+            timer.scheduleAtFixedRate(() -> ChannelManager.scan(1000L, subscribe, subscribeString, heartBeat, heartBeatString),
+                                      10, 10, TimeUnit.SECONDS);
 
             final ClientConfig clientConfig = ClientConfig.builder()
                     .schema(hasOption(commandLine, SSL) ? WebSocketSchema.WSS : WebSocketSchema.WS)
                     .host(getValue(commandLine, HOST, s -> s, "127.0.0.1"))
                     .port(getValue(commandLine, PORT, Integer::parseInt, 8000))
                     .path(getValue(commandLine, PATH, s -> s, "/"))
-                    .parseResult(hasOption(commandLine, PARSERESULT))
+                    .checkDelay(hasOption(commandLine, CHECKDELAY))
                     .unCompressGzip(hasOption(commandLine, UNGZIP))
                     .build();
             log.info(clientConfig.toString());
@@ -61,30 +64,8 @@ public class Start {
                 client.connect();
                 Util.sleepMS(connectInterval);
             }
-        } catch (ParseException e) {
+        } catch (Exception e) {
             log.error("Client Start Error : ", e);
         }
-    }
-
-
-    private static <V> V getValue(CommandLine commandLine, Option option, Convert<V> convert, V defaultValue) {
-
-        if (commandLine.hasOption(option.getLongOpt())) {
-            return convert.eval(commandLine.getOptionValue(option.getLongOpt()));
-        }
-        return defaultValue;
-    }
-
-
-    public static boolean hasOption(CommandLine commandLine, Option option) {
-
-        return commandLine.hasOption(option.getLongOpt());
-    }
-
-
-    interface Convert<V> {
-
-
-        V eval(String s);
     }
 }

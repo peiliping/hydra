@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 public class Util {
 
 
-    public static final String DEMO_NAMESPACE = "demo";
+    public final static long SEC_45 = 45 * 1000L;
 
-    public static final String DEMO_UID = "demo";
+    public final static long MIN_1 = 60 * 1000L;
 
 
     public static void sleepSec(long sec) {
