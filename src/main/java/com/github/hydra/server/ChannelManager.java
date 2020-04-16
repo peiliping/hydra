@@ -67,11 +67,9 @@ public class ChannelManager {
         if (subscribeBox == null) {
             return;
         }
-
         if (!subscribeBox.open) {
             return;
         }
-
         subscribeBox.lastHeartBeatTime = Util.nowMS();
     }
 
@@ -80,7 +78,6 @@ public class ChannelManager {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.get(id);
-
         if (subscribeBox == null) {
             log.error("it is not normal .");
             subscribeBox = new SubscribeBox(channel);
@@ -90,15 +87,12 @@ public class ChannelManager {
                 subscribeBox = old;
             }
         }
-
         if (!subscribeBox.open) {
             return;
         }
-
         Validate.isTrue(subscribeBox.addChannel(channel));
         Validate.isTrue(subscribeBox.addUid(uid));
         subscribeBox.topics.addAll(names);
-
         names.forEach(s -> {
             ChannelGroup channelGroup = nameSpace.get(s);
             if (channelGroup == null) {
@@ -110,7 +104,6 @@ public class ChannelManager {
             }
             channelGroup.add(channel);
         });
-
         if (uid != null) {
             userChannel.put(buildUidAndChannelId(uid, id), id);
         }
@@ -144,11 +137,9 @@ public class ChannelManager {
         if (subscribeBox == null) {
             return;
         }
-
         if (!subscribeBox.open) {
             return;
         }
-
         subscribeBox.topics.removeAll(names);
         names.forEach(s -> {
 

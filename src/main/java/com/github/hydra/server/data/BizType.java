@@ -16,11 +16,11 @@ public enum BizType {
 
     public static BizType of(String s) {
 
-        if (EXCHANGE.name.equals(s)) {
-            return EXCHANGE;
-        } else {
-            return null;
+        switch (s) {
+            case "exchange":
+                return EXCHANGE;
+            default:
+                return null;
         }
     }
-
 }

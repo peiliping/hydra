@@ -1,6 +1,7 @@
 package com.github.hydra.server.data;
 
 
+import com.github.hydra.constant.Util;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,5 +19,6 @@ public class PushMsg {
 
     private Object data;
 
-    private long ts;
+    @Builder.Default
+    private long ts = Util.nowSec();
 }

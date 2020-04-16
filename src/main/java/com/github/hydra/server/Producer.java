@@ -76,13 +76,15 @@ public class Producer {
                     return;
                 }
 
+                String nameSpace;
                 switch (msgType) {
                     case TICKER:
-                        String nameSpace = buildNameSpace(biz, type, topic);
-                        sendTextFrame(nameSpace, PushMsg.builder().biz(biz).type(type).topic(topic)
-                                .data(jsonObject.getJSONArray("data")).ts(Util.nowSec()).build());
+                        nameSpace = Util.buildNameSpace(biz, type, topic);
                         break;
+                    default:
+                        return;
                 }
+                sendTextFrame(nameSpace, biz, type, topic, jsonObject.getJSONArray("data"));
             } catch (Throwable e) {
                 log.error("subscribe data error : ", e);
             }
@@ -90,15 +92,10 @@ public class Producer {
     }
 
 
-    public static void sendTextFrame(String nameSpace, PushMsg o) {
+    public static void sendTextFrame(String nameSpace, String biz, String type, String topic, Object data) {
 
-        TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(o));
+        PushMsg pushMsg = PushMsg.builder().biz(biz).type(type).topic(topic).data(data).build();
+        TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(pushMsg));
         ChannelManager.broadCastInNameSpace(nameSpace, frame);
-    }
-
-
-    public static String buildNameSpace(String biz, String type, String topic) {
-
-        return biz + "_" + type + "_" + topic;
     }
 }

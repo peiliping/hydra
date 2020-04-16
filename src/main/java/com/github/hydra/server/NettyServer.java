@@ -60,7 +60,6 @@ public class NettyServer {
                 cp.addLast("ws-text", new TextFrameHandler());
             }
         });
-
         this.bootstrap.childOption(ChannelOption.TCP_NODELAY, false);
     }
 

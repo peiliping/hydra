@@ -2,6 +2,7 @@ package com.github.hydra.server;
 
 
 import com.alibaba.fastjson.JSON;
+import com.github.hydra.constant.Util;
 import com.github.hydra.server.data.Answer;
 import com.github.hydra.server.data.BizType;
 import com.github.hydra.server.data.Command;
@@ -44,13 +45,13 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             if (cmd.getTopics() == null) {
                 cmd.setTopics(Sets.newHashSet());
             }
-            Set<String> keys = cmd.getTopics().stream().map(s -> Producer.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
+            Set<String> topics = cmd.getTopics().stream().map(s -> Util.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
 
             if (Command.SUBSCRIBE.equals(cmd.getEvent())) {
                 String uid = null; //cmd.getToken() to uid;
-                ChannelManager.subscribe(ctx.channel(), keys, uid);
+                ChannelManager.subscribe(ctx.channel(), topics, uid);
             } else if (Command.UNSUBSCRIBE.equals(cmd.getEvent())) {
-                ChannelManager.unSubscribeTopics(ctx.channel(), keys);
+                ChannelManager.unSubscribeTopics(ctx.channel(), topics);
             } else {
                 return;
             }

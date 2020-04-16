@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 
@@ -12,9 +13,17 @@ import org.slf4j.LoggerFactory;
 public class Util {
 
 
+    private static final String SEP = "_";
+
     public final static long SEC_45 = 45 * 1000L;
 
     public final static long MIN_1 = 60 * 1000L;
+
+
+    public static String buildNameSpace(String... keys) {
+
+        return StringUtils.joinWith(SEP, keys);
+    }
 
 
     public static void sleepSec(long sec) {
