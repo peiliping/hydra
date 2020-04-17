@@ -8,6 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.zip.GZIPInputStream;
+
 
 @Slf4j
 public class Util {
@@ -63,5 +67,23 @@ public class Util {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger rootLogger = loggerContext.getLogger("root");
         rootLogger.setLevel(Level.toLevel(level));
+    }
+
+    public static String unCompressGzip(byte[] bytes) {
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+            GZIPInputStream unGzip = new GZIPInputStream(in);
+            byte[] buffer = new byte[256];
+            int n;
+            while ((n = unGzip.read(buffer)) >= 0) {
+                out.write(buffer, 0, n);
+            }
+            return out.toString();
+        } catch (Exception e) {
+            log.error("unCompressGzip error : ", e);
+        }
+        return "";
     }
 }

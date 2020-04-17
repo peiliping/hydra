@@ -9,10 +9,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.zip.GZIPInputStream;
-
 
 @Slf4j
 public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSocketFrame> {
@@ -36,7 +32,7 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
             log.debug("binary data length : {} ", msg.content().capacity());
             if (this.unCompressGzip) {
                 ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
-                log.debug(unCompressGzip(byteBuf.array()));
+                log.debug(Util.unCompressGzip(byteBuf.array()));
             }
         }
 
@@ -48,24 +44,5 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
         }
 
         this.box.lastTimestamp = Util.nowMS();
-    }
-
-
-    private static String unCompressGzip(byte[] bytes) {
-
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-            GZIPInputStream unGzip = new GZIPInputStream(in);
-            byte[] buffer = new byte[256];
-            int n;
-            while ((n = unGzip.read(buffer)) >= 0) {
-                out.write(buffer, 0, n);
-            }
-            return out.toString();
-        } catch (Exception e) {
-            log.error("unCompressGzip error : ", e);
-        }
-        return "";
     }
 }

@@ -7,6 +7,8 @@ import com.github.hydra.constant.Util;
 import com.github.hydra.server.data.BizType;
 import com.github.hydra.server.data.MsgType;
 import com.github.hydra.server.data.PushMsg;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.RateLimiter;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,8 @@ import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 
+import java.util.Map;
+
 
 @Slf4j
 public class Producer {
@@ -24,6 +28,8 @@ public class Producer {
     private Redisson redis;
 
     private RTopic topic;
+
+    private Map<String, RateLimiter> limiters = Maps.newConcurrentMap();
 
 
     public Producer(String address, String pwd, int dbnum, String topicName) {
@@ -97,5 +103,16 @@ public class Producer {
         PushMsg pushMsg = PushMsg.builder().biz(biz).type(type).topic(topic).data(data).build();
         TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(pushMsg));
         ChannelManager.broadCastInNameSpace(nameSpace, frame);
+    }
+
+
+    private boolean permit(String nameSpace, double ratio) {
+
+        RateLimiter rateLimiter = this.limiters.get(nameSpace);
+        if (rateLimiter == null) {
+            rateLimiter = RateLimiter.create(ratio);
+            this.limiters.put(nameSpace, rateLimiter);
+        }
+        return rateLimiter.tryAcquire();
     }
 }
