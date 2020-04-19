@@ -18,6 +18,7 @@ import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 
+import java.util.Base64;
 import java.util.Map;
 
 
@@ -82,15 +83,10 @@ public class Producer {
                     return;
                 }
 
-                String nameSpace;
-                switch (msgType) {
-                    case TICKER:
-                        nameSpace = Util.buildNameSpace(biz, type, topic);
-                        break;
-                    default:
-                        return;
+                String nameSpace = Util.buildNameSpace(biz, type, topic);
+                if (permit(nameSpace, 1)) {
+                    sendTextFrame(nameSpace, biz, type, topic, jsonObject.getJSONArray("data"), false);
                 }
-                sendTextFrame(nameSpace, biz, type, topic, jsonObject.getJSONArray("data"));
             } catch (Throwable e) {
                 log.error("subscribe data error : ", e);
             }
@@ -98,9 +94,10 @@ public class Producer {
     }
 
 
-    public static void sendTextFrame(String nameSpace, String biz, String type, String topic, Object data) {
+    public static void sendTextFrame(String nameSpace, String biz, String type, String topic, Object data, boolean zip) {
 
-        PushMsg pushMsg = PushMsg.builder().biz(biz).type(type).topic(topic).data(data).build();
+        data = zip ? Base64.getEncoder().encodeToString(Util.compressGzip((String) data)) : data;
+        PushMsg pushMsg = PushMsg.builder().biz(biz).type(type).topic(topic).data(data).zip(zip).build();
         TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(pushMsg));
         ChannelManager.broadCastInNameSpace(nameSpace, frame);
     }

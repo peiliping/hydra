@@ -19,6 +19,8 @@ public class PushMsg {
 
     private Object data;
 
+    private boolean zip;
+
     @Builder.Default
     private long ts = Util.nowSec();
 }

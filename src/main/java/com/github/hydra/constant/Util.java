@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 
 @Slf4j
@@ -68,6 +70,25 @@ public class Util {
         Logger rootLogger = loggerContext.getLogger("root");
         rootLogger.setLevel(Level.toLevel(level));
     }
+
+
+    public static byte[] compressGzip(String str) {
+
+        if (str == null || str.length() == 0) {
+            return null;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        GZIPOutputStream gzip;
+        try {
+            gzip = new GZIPOutputStream(out);
+            gzip.write(str.getBytes("UTF-8"));
+            gzip.close();
+        } catch (IOException e) {
+            log.error("gzip compress error.", e);
+        }
+        return out.toByteArray();
+    }
+
 
     public static String unCompressGzip(byte[] bytes) {
 
