@@ -9,7 +9,6 @@ import com.github.hydra.server.data.MsgType;
 import com.github.hydra.server.data.PushMsg;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.RateLimiter;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.Redisson;
@@ -55,25 +54,21 @@ public class Producer {
         this.topic.addListener(byte[].class, (channel, msg) -> {
             try {
                 String message = new String(msg);
-
+                if (StringUtils.isEmpty(message)) {
+                    return;
+                }
                 if (log.isDebugEnabled()) {
                     log.debug("subscribe data : {} .", message);
                 }
 
-                if (StringUtils.isEmpty(message) || message.length() > 1024 * 10) {
-                    return;
-                }
-
                 JSONObject jsonObject = JSON.parseObject(message);
 
-                String biz = jsonObject.getString("biz");
-                BizType bizType = BizType.of(biz);
+                BizType bizType = BizType.of(jsonObject.getString("bizType"));
                 if (bizType == null) {
                     return;
                 }
 
-                String type = jsonObject.getString("type");
-                MsgType msgType = MsgType.of(type);
+                MsgType msgType = MsgType.of(jsonObject.getString("msgType"));
                 if (msgType == null) {
                     return;
                 }
@@ -83,23 +78,40 @@ public class Producer {
                     return;
                 }
 
-                String nameSpace = Util.buildNameSpace(biz, type, topic);
-                if (permit(nameSpace, 1)) {
-                    sendTextFrame(nameSpace, biz, type, topic, jsonObject.getJSONArray("data"), false);
+                String data = jsonObject.getString("data");
+                if (StringUtils.isEmpty(data)) {
+                    return;
+                }
+                boolean zip = false;
+                if (data.length() >= 5 * 1024) {
+                    data = Base64.getEncoder().encodeToString(Util.compressGzip(data));
+                    zip = true;
+                }
+                PushMsg pushMsg = PushMsg.builder().biz(bizType).type(msgType).topic(topic).data(data).zip(zip).build();
+                String dataStr = JSON.toJSONString(pushMsg);
+
+                switch (bizType) {
+                    case NAMESPCACE:
+                        String nameSpace = Util.buildNameSpace(bizType.name, msgType.name, topic);
+                        if (permit(nameSpace, 1)) {
+                            ChannelManager.broadCastInNameSpace(nameSpace, dataStr);
+                        }
+                        break;
+                    case USER:
+                        String uid = jsonObject.getString("uid");
+                        if (StringUtils.isEmpty(uid)) {
+                            return;
+                        }
+                        ChannelManager.broadCast4User(uid, dataStr);
+                        break;
+                    case BROADCAST:
+                        ChannelManager.broadCastInAllOfWorld(dataStr);
+                        break;
                 }
             } catch (Throwable e) {
                 log.error("subscribe data error : ", e);
             }
         });
-    }
-
-
-    public static void sendTextFrame(String nameSpace, String biz, String type, String topic, Object data, boolean zip) {
-
-        data = zip ? Base64.getEncoder().encodeToString(Util.compressGzip((String) data)) : data;
-        PushMsg pushMsg = PushMsg.builder().biz(biz).type(type).topic(topic).data(data).zip(zip).build();
-        TextWebSocketFrame frame = new TextWebSocketFrame(JSON.toJSONString(pushMsg));
-        ChannelManager.broadCastInNameSpace(nameSpace, frame);
     }
 
 

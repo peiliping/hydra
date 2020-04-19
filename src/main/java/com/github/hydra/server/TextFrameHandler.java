@@ -48,7 +48,7 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             Set<String> topics = cmd.getTopics().stream().map(s -> Util.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
 
             if (Command.SUBSCRIBE.equals(cmd.getEvent())) {
-                String uid = null; //cmd.getToken() to uid;
+                String uid = cmd.getToken();
                 ChannelManager.subscribe(ctx.channel(), topics, uid);
             } else if (Command.UNSUBSCRIBE.equals(cmd.getEvent())) {
                 ChannelManager.unSubscribeTopics(ctx.channel(), topics);

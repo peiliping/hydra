@@ -3,7 +3,9 @@ package com.github.hydra.server.data;
 
 public enum BizType {
 
-    EXCHANGE("exchange");
+    NAMESPCACE("namespace"),
+    USER("user"),
+    BROADCAST("broadcast");
 
     public final String name;
 
@@ -17,8 +19,12 @@ public enum BizType {
     public static BizType of(String s) {
 
         switch (s) {
-            case "exchange":
-                return EXCHANGE;
+            case "namespace":
+                return NAMESPCACE;
+            case "user":
+                return USER;
+            case "broadcast":
+                return BROADCAST;
             default:
                 return null;
         }

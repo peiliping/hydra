@@ -151,11 +151,12 @@ public class ChannelManager {
     }
 
 
-    public static void broadCastInNameSpace(String name, TextWebSocketFrame tws) {
+    public static void broadCastInNameSpace(String name, String txt) {
 
         ChannelGroup channelGroup = nameSpace.get(name);
         if (channelGroup != null) {
-            channelGroup.writeAndFlush(tws, ChannelMatchers.all(), true);
+            TextWebSocketFrame frame = new TextWebSocketFrame(txt);
+            channelGroup.writeAndFlush(frame, ChannelMatchers.all(), true);
             broadcastCount.incrementAndGet();
         }
     }
@@ -163,20 +164,22 @@ public class ChannelManager {
 
     public static void broadCast4User(String uid, final String txt) {
 
+        TextWebSocketFrame frame = new TextWebSocketFrame(txt);
         NavigableMap<String, String> tmp = userChannel.subMap(buildUidAndChannelId(uid, null), true, buildUidAndChannelId(uid, "~"), true);
         tmp.forEach((k, v) -> {
 
             SubscribeBox subscribeBox = subscribeMap.get(v);
             if (subscribeBox != null) {
-                subscribeBox.channel.writeAndFlush(new TextWebSocketFrame(txt));
+                subscribeBox.channel.writeAndFlush(frame);
             }
         });
     }
 
 
-    public static void broadCastInAllOfWorld(TextWebSocketFrame tws) {
+    public static void broadCastInAllOfWorld(String txt) {
 
-        globalGroup.writeAndFlush(tws);
+        TextWebSocketFrame frame = new TextWebSocketFrame(txt);
+        globalGroup.writeAndFlush(frame);
     }
 
 

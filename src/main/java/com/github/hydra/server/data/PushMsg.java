@@ -11,9 +11,9 @@ import lombok.Getter;
 public class PushMsg {
 
 
-    private String biz;
+    private BizType biz;
 
-    private String type;
+    private MsgType type;
 
     private String topic;
 
