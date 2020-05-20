@@ -96,9 +96,10 @@ public class ChannelManager {
         names.forEach(s -> {
             ChannelGroup channelGroup = nameSpace.get(s);
             if (channelGroup == null) {
-                channelGroup = new DefaultChannelGroup(new DefaultEventExecutor());
+                channelGroup = new DefaultChannelGroup(new DefaultEventExecutor());//TODO executor 是否应该共用
                 ChannelGroup tmpChannelGroup = nameSpace.putIfAbsent(s, channelGroup);
                 if (tmpChannelGroup != null) {
+                    channelGroup.close();
                     channelGroup = tmpChannelGroup;
                 }
             }
