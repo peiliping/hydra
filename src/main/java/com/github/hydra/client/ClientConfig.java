@@ -21,7 +21,5 @@ public class ClientConfig {
 
     private String path;
 
-    private boolean checkDelay;
-
     private boolean unCompressGzip;
 }

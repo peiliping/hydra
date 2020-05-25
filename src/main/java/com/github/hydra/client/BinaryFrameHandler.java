@@ -28,21 +28,20 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, BinaryWebSocketFrame msg) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("binary data length : {} ", msg.content().capacity());
-            if (this.unCompressGzip) {
-                ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
-                log.debug(Util.unCompressGzip(byteBuf.array()));
-            }
-        }
-
         if (this.box == null) {
             this.box = ChannelManager.getChannelBox(ctx.channel());
             if (this.box == null) {
                 return;
             }
         }
-
         this.box.lastTimestamp = Util.nowMS();
+
+        if (log.isDebugEnabled()) {
+            log.debug("binary data length : {} ", msg.content().capacity());
+            if (this.unCompressGzip) {
+                ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
+                log.debug("content : " + Util.unCompressGzip(byteBuf.array()));
+            }
+        }
     }
 }

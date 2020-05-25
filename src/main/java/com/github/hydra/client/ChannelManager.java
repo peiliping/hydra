@@ -52,22 +52,19 @@ public class ChannelManager {
     }
 
 
-    public static void scan(long realTimeLevel, boolean subscribe, String subscribeString, boolean heartBeat, String heartBeatString) {
+    public static void scan(boolean subscribe, String subscribeString, boolean heartBeat, String heartBeatString) {
 
-        int connectionsCount = channelFutures.size();
-        int channelsCount = inProcessing.size();
         int subscribedCount = 0;
         int realTimeCount = 0;
+
+        String[] subscribeItems = subscribe ? subscribeString.split("\\$") : null;
 
         long now = Util.nowMS();
         String hbStr = heartBeat ? String.format(heartBeatString, now) : null;
 
-        for (int i = 0; i < connectionsCount; i++) {
+        for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
-            if (box == null) {
-                continue;
-            }
-            if (!box.channel.isActive() || !box.channel.isWritable()) {
+            if (box == null | !box.channel.isActive() || !box.channel.isWritable()) {
                 continue;
             }
 
@@ -76,16 +73,18 @@ public class ChannelManager {
                 if (heartBeat) {
                     box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
                 }
-                if (realTimeLevel > box.delay && Util.MIN_1 > (now - box.lastTimestamp)) {
+                if (Util.MIN_1 > (now - box.lastTimestamp)) {
                     realTimeCount++;
                 }
             } else if (subscribe) {
-                TextWebSocketFrame frame = new TextWebSocketFrame(subscribeString);
-                box.channel.writeAndFlush(frame);
+                for (String item : subscribeItems) {
+                    TextWebSocketFrame frame = new TextWebSocketFrame(item);
+                    box.channel.writeAndFlush(frame);
+                }
                 box.subscribed = true;
             }
         }
-        log.info("channel : {}, subscribed : {}, realtime : {} .", channelsCount, subscribedCount, realTimeCount);
+        log.info("channel : {}, subscribed : {}, realtime : {} .", inProcessing.size(), subscribedCount, realTimeCount);
     }
 
 
@@ -95,8 +94,6 @@ public class ChannelManager {
         public Channel channel;
 
         public boolean subscribed = false;
-
-        public long delay = 0L;
 
         public long lastTimestamp = Util.nowMS();
 

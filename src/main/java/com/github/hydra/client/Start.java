@@ -46,15 +46,13 @@ public class Start {
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
             log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
 
-            timer.scheduleAtFixedRate(() -> ChannelManager.scan(1000L, subscribe, subscribeString, heartBeat, heartBeatString),
-                                      10, 10, TimeUnit.SECONDS);
+            timer.scheduleAtFixedRate(() -> ChannelManager.scan(subscribe, subscribeString, heartBeat, heartBeatString), 5, 10, TimeUnit.SECONDS);
 
             final ClientConfig clientConfig = ClientConfig.builder()
                     .schema(hasOption(commandLine, SSL) ? WebSocketSchema.WSS : WebSocketSchema.WS)
                     .host(getValue(commandLine, HOST, s -> s, "127.0.0.1"))
                     .port(getValue(commandLine, PORT, Integer::parseInt, 8000))
                     .path(getValue(commandLine, PATH, s -> s, "/"))
-                    .checkDelay(hasOption(commandLine, CHECKDELAY))
                     .unCompressGzip(hasOption(commandLine, UNGZIP))
                     .build();
             log.info(clientConfig.toString());
