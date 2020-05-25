@@ -58,7 +58,7 @@ public class ChannelManager {
         String[] subscribeItems = subscribeString.split("\\$");
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
-            if (box == null | !box.channel.isActive() || !box.channel.isWritable()) {
+            if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
                 continue;
             }
             if (!box.subscribed) {
