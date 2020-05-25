@@ -9,6 +9,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -52,12 +53,32 @@ public class ChannelManager {
     }
 
 
-    public static void scan(boolean subscribe, String subscribeString, boolean heartBeat, String heartBeatString) {
+    public static void subscribe(String subscribeString, long subInterval) {
+
+        String[] subscribeItems = subscribeString.split("\\$");
+        for (int i = 0; i < channelFutures.size(); i++) {
+            ChannelBox box = getChannelBox(channelFutures.get(i).channel());
+            if (box == null | !box.channel.isActive() || !box.channel.isWritable()) {
+                continue;
+            }
+            if (!box.subscribed) {
+                for (String item : subscribeItems) {
+                    if (StringUtils.isNotBlank(item)) {
+                        TextWebSocketFrame frame = new TextWebSocketFrame(item);
+                        Util.sleepMS(subInterval);
+                        box.channel.writeAndFlush(frame);
+                    }
+                }
+                box.subscribed = true;
+            }
+        }
+    }
+
+
+    public static void scan(boolean heartBeat, String heartBeatString) {
 
         int subscribedCount = 0;
         int realTimeCount = 0;
-
-        String[] subscribeItems = subscribe ? subscribeString.split("\\$") : null;
 
         long now = Util.nowMS();
         String hbStr = heartBeat ? String.format(heartBeatString, now) : null;
@@ -67,24 +88,18 @@ public class ChannelManager {
             if (box == null | !box.channel.isActive() || !box.channel.isWritable()) {
                 continue;
             }
+            if (heartBeat) {
+                box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
+            }
 
             if (box.subscribed) {
                 subscribedCount++;
-                if (heartBeat) {
-                    box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
-                }
                 if (Util.MIN_1 > (now - box.lastTimestamp)) {
                     realTimeCount++;
                 }
-            } else if (subscribe) {
-                for (String item : subscribeItems) {
-                    TextWebSocketFrame frame = new TextWebSocketFrame(item);
-                    box.channel.writeAndFlush(frame);
-                }
-                box.subscribed = true;
             }
         }
-        log.info("channel : {}, subscribed : {}, realtime : {} .", inProcessing.size(), subscribedCount, realTimeCount);
+        log.info("monitor : channel : {}, subscribed : {}, realtime : {} .", inProcessing.size(), subscribedCount, realTimeCount);
     }
 
 

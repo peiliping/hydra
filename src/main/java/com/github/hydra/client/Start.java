@@ -20,7 +20,7 @@ import static com.github.hydra.constant.CMDUtil.hasOption;
 public class Start {
 
 
-    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(1);
+    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(2);
 
 
     public static void main(String[] args) {
@@ -46,7 +46,10 @@ public class Start {
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
             log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
 
-            timer.scheduleAtFixedRate(() -> ChannelManager.scan(subscribe, subscribeString, heartBeat, heartBeatString), 5, 10, TimeUnit.SECONDS);
+            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 5, 10, TimeUnit.SECONDS);
+            if (subscribe) {
+                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, connectInterval), 5, 10, TimeUnit.SECONDS);
+            }
 
             final ClientConfig clientConfig = ClientConfig.builder()
                     .schema(hasOption(commandLine, SSL) ? WebSocketSchema.WSS : WebSocketSchema.WS)
