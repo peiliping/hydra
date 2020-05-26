@@ -25,6 +25,8 @@ public class CMD {
 
     static final Option SUBSCRIBE = Option.builder().longOpt("subscribe").hasArg(true).required(false).desc("订阅请求的字符串").build();
 
+    static final Option SUBSCRIBEINTERVAL = Option.builder().longOpt("subscribeInterval").hasArg(true).required(false).desc("订阅请求的间隔时间").build();
+
     static final Option HEARTBEAT = Option.builder().longOpt("heartBeat").hasArg(true).required(false).desc("发送心跳包的字符串,时间戳用%s占位").build();
 
     static final Option UNGZIP = Option.builder().longOpt("ungzip").hasArg(false).required(false).desc("binary ungzip").build();
@@ -41,7 +43,7 @@ public class CMD {
     static {
         OPTIONS.addOption(HELP).addOption(LOGLEVEL)
                 .addOption(CONNECTIONS).addOption(CONNECTINTERVAL)
-                .addOption(SUBSCRIBE).addOption(HEARTBEAT).addOption(UNGZIP)
+                .addOption(SUBSCRIBE).addOption(SUBSCRIBEINTERVAL).addOption(HEARTBEAT).addOption(UNGZIP)
                 .addOption(SSL).addOption(HOST).addOption(PORT).addOption(PATH);
     }
 
@@ -51,9 +53,9 @@ public class CMD {
             return false;
         }
         Collection<Option> collection = OPTIONS.getOptions();
-        System.out.println(String.format("%-15s %-7s %-8s %-10s", "Name", "HasArg", "Required", "Description"));
+        System.out.println(String.format("%-18s %-7s %-8s %-10s", "Name", "HasArg", "Required", "Description"));
         for (Option op : collection) {
-            String c = String.format("%-15s %-7s %-8s %-10s", op.getLongOpt(), op.hasArg(), op.isRequired(), op.getDescription());
+            String c = String.format("%-18s %-7s %-8s %-10s", op.getLongOpt(), op.hasArg(), op.isRequired(), op.getDescription());
             System.out.println(c);
         }
         return true;

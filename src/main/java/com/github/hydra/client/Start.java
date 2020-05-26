@@ -34,21 +34,22 @@ public class Start {
             Util.updateLogLevel(getValue(commandLine, LOGLEVEL, s -> s, "INFO"));
 
             final int connections = getValue(commandLine, CONNECTIONS, Integer::parseInt, 1);
-            final long connectInterval = getValue(commandLine, CONNECTINTERVAL, Long::parseLong, 3L);
+            final long connectInterval = getValue(commandLine, CONNECTINTERVAL, Long::parseLong, 2L);
             log.info("connections {} , connectInterval {} .", connections, connectInterval);
 
 
             final boolean subscribe = hasOption(commandLine, SUBSCRIBE);
             final String subscribeString = getValue(commandLine, SUBSCRIBE, s -> s, null);
+            final long subscribeInterval = getValue(commandLine, SUBSCRIBEINTERVAL, Long::parseLong, 2L);
             log.info("subscribe {} , subscribeString {} .", subscribe, subscribeString);
 
             final boolean heartBeat = hasOption(commandLine, HEARTBEAT);
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
             log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
 
-            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 1, 10, TimeUnit.SECONDS);
+            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 3, 10, TimeUnit.SECONDS);
             if (subscribe) {
-                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, connectInterval), 6, 10, TimeUnit.SECONDS);
+                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, subscribeInterval), 5, 10, TimeUnit.SECONDS);
             }
 
             final ClientConfig clientConfig = ClientConfig.builder()

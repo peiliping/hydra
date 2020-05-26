@@ -53,9 +53,9 @@ public class ChannelManager {
     }
 
 
-    public static void subscribe(String subscribeString, long subInterval) {
+    public static void subscribe(String subscribeString, long subscribeInterval) {
 
-        String[] subscribeItems = subscribeString.split("\\$");
+        String[] subscribeItems = null;
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
             if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
@@ -64,11 +64,14 @@ public class ChannelManager {
             if (box.subscribed) {
                 continue;
             }
+            if (subscribeItems == null) {
+                subscribeItems = subscribeString.split("\\$");
+            }
             for (String item : subscribeItems) {
                 if (StringUtils.isNotBlank(item)) {
                     TextWebSocketFrame frame = new TextWebSocketFrame(item);
-                    Util.sleepMS(subInterval);
                     box.channel.writeAndFlush(frame);
+                    Util.sleepMS(subscribeInterval);
                 }
             }
             box.subscribed = true;
