@@ -19,26 +19,18 @@ import java.util.zip.GZIPOutputStream;
 public class Util {
 
 
-    private static final String SEP = "_";
+    public final static long MIN_1 = 60 * 1000L;
 
     public final static long SEC_45 = 45 * 1000L;
 
-    public final static long MIN_1 = 60 * 1000L;
+    private static final String SEP = "_";
 
 
-    public static String buildNameSpace(String... keys) {
+    public static void updateLogLevel(String level) {
 
-        return StringUtils.joinWith(SEP, keys);
-    }
-
-
-    public static void sleepSec(long sec) {
-
-        try {
-            Thread.sleep(sec * 1000);
-        } catch (InterruptedException e) {
-            log.error("Util.sleep", e);
-        }
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger rootLogger = loggerContext.getLogger("root");
+        rootLogger.setLevel(Level.toLevel(level));
     }
 
 
@@ -47,7 +39,6 @@ public class Util {
         if (ms <= 0) {
             return;
         }
-
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -56,9 +47,16 @@ public class Util {
     }
 
 
-    public static long nowSec() {
+    public static void sleepSec(long sec) {
 
-        return System.currentTimeMillis() / 1000;
+        if (sec <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(sec * 1000);
+        } catch (InterruptedException e) {
+            log.error("Util.sleep", e);
+        }
     }
 
 
@@ -68,11 +66,9 @@ public class Util {
     }
 
 
-    public static void updateLogLevel(String level) {
+    public static long nowSec() {
 
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger rootLogger = loggerContext.getLogger("root");
-        rootLogger.setLevel(Level.toLevel(level));
+        return System.currentTimeMillis() / 1000;
     }
 
 
@@ -110,5 +106,11 @@ public class Util {
             log.error("unCompressGzip error : ", e);
         }
         return "";
+    }
+
+
+    public static String buildNameSpace(String... keys) {
+
+        return StringUtils.joinWith(SEP, keys);
     }
 }
