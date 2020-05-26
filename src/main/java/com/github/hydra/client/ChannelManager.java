@@ -61,17 +61,19 @@ public class ChannelManager {
             if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
                 continue;
             }
-            if (!box.subscribed) {
-                for (String item : subscribeItems) {
-                    if (StringUtils.isNotBlank(item)) {
-                        TextWebSocketFrame frame = new TextWebSocketFrame(item);
-                        Util.sleepMS(subInterval);
-                        box.channel.writeAndFlush(frame);
-                    }
-                }
-                box.subscribed = true;
+            if (box.subscribed) {
+                continue;
             }
+            for (String item : subscribeItems) {
+                if (StringUtils.isNotBlank(item)) {
+                    TextWebSocketFrame frame = new TextWebSocketFrame(item);
+                    Util.sleepMS(subInterval);
+                    box.channel.writeAndFlush(frame);
+                }
+            }
+            box.subscribed = true;
         }
+
     }
 
 
@@ -91,12 +93,11 @@ public class ChannelManager {
             if (heartBeat) {
                 box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
             }
-
             if (box.subscribed) {
                 subscribedCount++;
-                if (Util.MIN_1 > (now - box.lastTimestamp)) {
-                    realTimeCount++;
-                }
+            }
+            if (Util.MIN_1 > (now - box.lastTimestamp)) {
+                realTimeCount++;
             }
         }
         log.info("monitor : channel : {}, subscribed : {}, realtime : {} .", inProcessing.size(), subscribedCount, realTimeCount);

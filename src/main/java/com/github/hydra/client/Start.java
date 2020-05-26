@@ -46,9 +46,9 @@ public class Start {
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
             log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
 
-            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 5, 10, TimeUnit.SECONDS);
+            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 1, 10, TimeUnit.SECONDS);
             if (subscribe) {
-                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, connectInterval), 5, 10, TimeUnit.SECONDS);
+                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, connectInterval), 6, 10, TimeUnit.SECONDS);
             }
 
             final ClientConfig clientConfig = ClientConfig.builder()

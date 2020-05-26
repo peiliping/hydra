@@ -38,9 +38,13 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
 
         if (log.isDebugEnabled()) {
             log.debug("binary data length : {} ", msg.content().capacity());
-            if (this.unCompressGzip) {
-                ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
-                log.debug("content : " + Util.unCompressGzip(byteBuf.array()));
+        }
+
+        if (this.unCompressGzip) {
+            ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
+            String content = Util.unCompressGzip(byteBuf.array());
+            if (log.isDebugEnabled()) {
+                log.debug("content : " + content);
             }
         }
     }
