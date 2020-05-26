@@ -12,8 +12,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.hydra.client.CMD.*;
-import static com.github.hydra.constant.CMDUtil.getValue;
-import static com.github.hydra.constant.CMDUtil.hasOption;
 
 
 @Slf4j
@@ -54,7 +52,6 @@ public class Start {
             if (subscribe) {
                 timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, subscribeInterval), 3, 5, TimeUnit.SECONDS);
             }
-
             timer.scheduleAtFixedRate(() -> ChannelManager.monitor(), 5, 10, TimeUnit.SECONDS);
 
             final ClientConfig clientConfig = ClientConfig.builder()

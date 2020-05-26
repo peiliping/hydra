@@ -1,22 +1,16 @@
 package com.github.hydra.client;
 
 
+import com.github.hydra.constant.CMDUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import java.util.Collection;
 
-
-public class CMD {
+public class CMD extends CMDUtil {
 
 
     static final Options OPTIONS = new Options();
-
-
-    static final Option HELP = Option.builder().longOpt("help").hasArg(false).required(false).desc("help").build();
-
-    static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger level").build();
 
 
     static final Option CONNECTIONS = Option.builder().longOpt("connections").hasArg(true).required(false).desc("创建连接数").build();
@@ -31,7 +25,7 @@ public class CMD {
 
     static final Option HEARTBEATINTERVAL = Option.builder().longOpt("heartBeatInterval").hasArg(true).required(false).desc("心跳的间隔时间(s)").build();
 
-    static final Option UNGZIP = Option.builder().longOpt("ungzip").hasArg(false).required(false).desc("ungzip binary data").build();
+    static final Option UNGZIP = Option.builder().longOpt("unGzip").hasArg(false).required(false).desc("unGzip binary data").build();
 
 
     static final Option SSL = Option.builder().longOpt("ssl").hasArg(false).required(false).desc("使用ssl").build();
@@ -53,15 +47,6 @@ public class CMD {
 
     public static boolean HELP(CommandLine commandLine) {
 
-        if (!commandLine.hasOption(HELP.getLongOpt())) {
-            return false;
-        }
-        Collection<Option> collection = OPTIONS.getOptions();
-        System.out.println(String.format("%-18s %-7s %-8s %-10s", "Name", "HasArg", "Required", "Description"));
-        for (Option op : collection) {
-            String c = String.format("%-18s %-7s %-8s %-10s", op.getLongOpt(), op.hasArg(), op.isRequired(), op.getDescription());
-            System.out.println(c);
-        }
-        return true;
+        return HELP(commandLine, OPTIONS);
     }
 }
