@@ -1,33 +1,20 @@
 package com.github.hydra.server;
 
 
+import com.github.hydra.constant.CMDUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import java.util.Collection;
 
-
-public class CMD {
+public class CMD extends CMDUtil {
 
 
     static final Options OPTIONS = new Options();
 
-    static final Option HELP = Option.builder().longOpt("help").hasArg(false).required(false).desc("help").build();
-
-    static final Option LOGLEVEL = Option.builder().longOpt("log-level").hasArg(true).required(false).desc("root logger level").build();
-
     static final Option MONITOR_INTERVAL = Option.builder().longOpt("monitor-interval").hasArg(true).required(false).desc("monitor interval").build();
 
     static final Option CHECK_IDLE = Option.builder().longOpt("check-idle").hasArg(false).required(false).desc("check idle").build();
-
-
-    static final Option HOST = Option.builder().longOpt("host").hasArg(true).required(false).desc("ip or address").build();
-
-    static final Option PORT = Option.builder().longOpt("port").hasArg(true).required(false).desc("port").build();
-
-    static final Option PATH = Option.builder().longOpt("path").hasArg(true).required(false).desc("path").build();
-
 
     static final Option REDIS_ADDRESS = Option.builder().longOpt("redis-address").hasArg(true).required(false).desc("redis address").build();
 
@@ -45,15 +32,6 @@ public class CMD {
 
     public static boolean HELP(CommandLine commandLine) {
 
-        if (!commandLine.hasOption(HELP.getLongOpt())) {
-            return false;
-        }
-        Collection<Option> collection = OPTIONS.getOptions();
-        System.out.println(String.format("%-18s %-7s %-8s %-10s", "Name", "HasArg", "Required", "Description"));
-        for (Option op : collection) {
-            String c = String.format("%-18s %-7s %-8s %-10s", op.getLongOpt(), op.hasArg(), op.isRequired(), op.getDescription());
-            System.out.println(c);
-        }
-        return true;
+        return HELP(commandLine, OPTIONS);
     }
 }

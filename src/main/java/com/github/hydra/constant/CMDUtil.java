@@ -15,25 +15,16 @@ public class CMDUtil {
 
     public static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger level").build();
 
+    public static final Option HOST = Option.builder().longOpt("host").hasArg(true).required(false).desc("ip or address").build();
 
-    public static <V> V getValue(CommandLine commandLine, Option option, Convert<V> convert, V defaultValue) {
+    public static final Option PORT = Option.builder().longOpt("port").hasArg(true).required(false).desc("port").build();
 
-        if (commandLine.hasOption(option.getLongOpt())) {
-            return convert.eval(commandLine.getOptionValue(option.getLongOpt()));
-        }
-        return defaultValue;
-    }
-
-
-    public static boolean hasOption(CommandLine commandLine, Option option) {
-
-        return commandLine.hasOption(option.getLongOpt());
-    }
+    public static final Option PATH = Option.builder().longOpt("path").hasArg(true).required(false).desc("path").build();
 
 
     public static boolean HELP(CommandLine commandLine, Options options) {
 
-        if (!commandLine.hasOption(HELP.getLongOpt())) {
+        if (!hasOption(commandLine, HELP)) {
             return false;
         }
         Collection<Option> collection = options.getOptions();
@@ -43,6 +34,21 @@ public class CMDUtil {
             System.out.println(c);
         }
         return true;
+    }
+
+
+    public static boolean hasOption(CommandLine commandLine, Option option) {
+
+        return commandLine.hasOption(option.getLongOpt());
+    }
+
+
+    public static <V> V getValue(CommandLine commandLine, Option option, Convert<V> convert, V defaultValue) {
+
+        if (hasOption(commandLine, option)) {
+            return convert.eval(commandLine.getOptionValue(option.getLongOpt()));
+        }
+        return defaultValue;
     }
 
 

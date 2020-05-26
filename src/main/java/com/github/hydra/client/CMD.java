@@ -12,7 +12,6 @@ public class CMD extends CMDUtil {
 
     static final Options OPTIONS = new Options();
 
-
     static final Option CONNECTIONS = Option.builder().longOpt("connections").hasArg(true).required(false).desc("创建连接数").build();
 
     static final Option CONNECTINTERVAL = Option.builder().longOpt("connectInterval").hasArg(true).required(false).desc("创建连接的间隔时间(ms)").build();
@@ -27,14 +26,7 @@ public class CMD extends CMDUtil {
 
     static final Option UNGZIP = Option.builder().longOpt("unGzip").hasArg(false).required(false).desc("unGzip binary data").build();
 
-
     static final Option SSL = Option.builder().longOpt("ssl").hasArg(false).required(false).desc("使用ssl").build();
-
-    static final Option HOST = Option.builder().longOpt("host").hasArg(true).required(false).desc("ip or address").build();
-
-    static final Option PORT = Option.builder().longOpt("port").hasArg(true).required(false).desc("port").build();
-
-    static final Option PATH = Option.builder().longOpt("path").hasArg(true).required(false).desc("path").build();
 
     static {
         OPTIONS.addOption(HELP).addOption(LOGLEVEL)

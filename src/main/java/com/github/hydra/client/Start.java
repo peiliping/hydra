@@ -6,6 +6,7 @@ import com.github.hydra.constant.WebSocketSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.lang3.Validate;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,12 +19,11 @@ import static com.github.hydra.client.CMD.*;
 public class Start {
 
 
-    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(3);
-
-
     public static void main(String[] args) {
 
         try {
+            ScheduledExecutorService timer = Executors.newScheduledThreadPool(3);
+
             CommandLine commandLine = (new DefaultParser()).parse(OPTIONS, args);
             if (HELP(commandLine)) {
                 return;
@@ -35,7 +35,6 @@ public class Start {
             final long connectInterval = getValue(commandLine, CONNECTINTERVAL, Long::parseLong, 2L);
             log.info("connections {} , connectInterval {} .", connections, connectInterval);
 
-
             final boolean subscribe = hasOption(commandLine, SUBSCRIBE);
             final String subscribeString = getValue(commandLine, SUBSCRIBE, s -> s, null);
             final long subscribeInterval = getValue(commandLine, SUBSCRIBEINTERVAL, Long::parseLong, 2L);
@@ -46,11 +45,11 @@ public class Start {
             final int heartBeatInterval = getValue(commandLine, HEARTBEATINTERVAL, Integer::parseInt, 15);
             log.info("heartBeat {} , heartBeatString {} heartBeatInterval {} .", heartBeat, heartBeatString, heartBeatInterval);
 
-            if (heartBeat) {
-                timer.scheduleAtFixedRate(() -> ChannelManager.heartBeat(heartBeatString), 1, heartBeatInterval, TimeUnit.SECONDS);
-            }
             if (subscribe) {
                 timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, subscribeInterval), 3, 5, TimeUnit.SECONDS);
+            }
+            if (heartBeat) {
+                timer.scheduleAtFixedRate(() -> ChannelManager.heartBeat(heartBeatString), 1, heartBeatInterval, TimeUnit.SECONDS);
             }
             timer.scheduleAtFixedRate(() -> ChannelManager.monitor(), 5, 10, TimeUnit.SECONDS);
 
@@ -70,6 +69,8 @@ public class Start {
             }
         } catch (Exception e) {
             log.error("Client Start Error : ", e);
+            Validate.isTrue(false);
+            System.exit(0);
         }
     }
 }

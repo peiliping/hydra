@@ -11,8 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.hydra.constant.CMDUtil.getValue;
-import static com.github.hydra.constant.CMDUtil.hasOption;
 import static com.github.hydra.server.CMD.*;
 
 
@@ -20,12 +18,11 @@ import static com.github.hydra.server.CMD.*;
 public class Start {
 
 
-    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(1);
-
-
     public static void main(String[] args) {
 
         try {
+            ScheduledExecutorService timer = Executors.newScheduledThreadPool(1);
+
             CommandLine commandLine = (new DefaultParser()).parse(OPTIONS, args);
             if (HELP(commandLine)) {
                 return;
