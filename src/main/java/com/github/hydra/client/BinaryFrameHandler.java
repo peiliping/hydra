@@ -36,15 +36,15 @@ public class BinaryFrameHandler extends SimpleChannelInboundHandler<BinaryWebSoc
         }
         this.box.lastTimestamp = Util.nowMS();
 
-        if (log.isDebugEnabled()) {
-            log.debug("binary data length : {} ", msg.content().capacity());
-        }
-
         if (this.unCompressGzip) {
             ByteBuf byteBuf = Unpooled.copiedBuffer(msg.content());
             String content = Util.unCompressGzip(byteBuf.array());
             if (log.isDebugEnabled()) {
-                log.debug("content : " + content);
+                log.debug("data length : {} , content : {} ", content.length(), content);
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("data length : {} ", msg.content().capacity());
             }
         }
     }

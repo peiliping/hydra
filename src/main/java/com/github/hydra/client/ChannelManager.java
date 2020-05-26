@@ -80,26 +80,33 @@ public class ChannelManager {
     }
 
 
-    public static void scan(boolean heartBeat, String heartBeatString) {
-
-        int subscribedCount = 0;
-        int realTimeCount = 0;
+    public static void heartBeat(String heartBeatString) {
 
         long now = Util.nowMS();
-        String hbStr = heartBeat ? String.format(heartBeatString, now) : null;
-
+        String hbStr = String.format(heartBeatString, now);
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
             if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
                 continue;
             }
-            if (heartBeat) {
-                box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
+            box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
+        }
+    }
+
+
+    public static void monitor() {
+
+        int subscribedCount = 0, realTimeCount = 0;
+        long now = Util.nowMS();
+        for (int i = 0; i < channelFutures.size(); i++) {
+            ChannelBox box = getChannelBox(channelFutures.get(i).channel());
+            if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
+                continue;
             }
             if (box.subscribed) {
                 subscribedCount++;
             }
-            if (Util.MIN_1 > (now - box.lastTimestamp)) {
+            if ((now - box.lastTimestamp) < Util.MIN_1) {
                 realTimeCount++;
             }
         }

@@ -20,7 +20,7 @@ import static com.github.hydra.constant.CMDUtil.hasOption;
 public class Start {
 
 
-    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(2);
+    private static ScheduledExecutorService timer = Executors.newScheduledThreadPool(3);
 
 
     public static void main(String[] args) {
@@ -41,16 +41,21 @@ public class Start {
             final boolean subscribe = hasOption(commandLine, SUBSCRIBE);
             final String subscribeString = getValue(commandLine, SUBSCRIBE, s -> s, null);
             final long subscribeInterval = getValue(commandLine, SUBSCRIBEINTERVAL, Long::parseLong, 2L);
-            log.info("subscribe {} , subscribeString {} .", subscribe, subscribeString);
+            log.info("subscribe {} , subscribeString {} subscribeInterval {} .", subscribe, subscribeString, subscribeInterval);
 
             final boolean heartBeat = hasOption(commandLine, HEARTBEAT);
             final String heartBeatString = getValue(commandLine, HEARTBEAT, s -> s, null);
-            log.info("heartBeat {} , heartBeatString {} .", heartBeat, heartBeatString);
+            final int heartBeatInterval = getValue(commandLine, HEARTBEATINTERVAL, Integer::parseInt, 15);
+            log.info("heartBeat {} , heartBeatString {} heartBeatInterval {} .", heartBeat, heartBeatString, heartBeatInterval);
 
-            timer.scheduleAtFixedRate(() -> ChannelManager.scan(heartBeat, heartBeatString), 3, 10, TimeUnit.SECONDS);
-            if (subscribe) {
-                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, subscribeInterval), 5, 10, TimeUnit.SECONDS);
+            if (heartBeat) {
+                timer.scheduleAtFixedRate(() -> ChannelManager.heartBeat(heartBeatString), 1, heartBeatInterval, TimeUnit.SECONDS);
             }
+            if (subscribe) {
+                timer.scheduleAtFixedRate(() -> ChannelManager.subscribe(subscribeString, subscribeInterval), 3, 5, TimeUnit.SECONDS);
+            }
+
+            timer.scheduleAtFixedRate(() -> ChannelManager.monitor(), 5, 10, TimeUnit.SECONDS);
 
             final ClientConfig clientConfig = ClientConfig.builder()
                     .schema(hasOption(commandLine, SSL) ? WebSocketSchema.WSS : WebSocketSchema.WS)

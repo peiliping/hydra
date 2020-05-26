@@ -26,28 +26,8 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
         this.box.lastTimestamp = Util.nowMS();
 
         if (log.isDebugEnabled()) {
-            log.debug("text data length : {} ", msg.content().capacity());
-            log.debug("content : " + msg.text());
+            String text = msg.text();
+            log.debug("data length : {} , content : {} ", text.length(), text);
         }
-    }
-
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-
-        if (log.isDebugEnabled()) {
-            log.debug("channel active : " + ctx.channel());
-        }
-        super.channelActive(ctx);
-    }
-
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
-        if (log.isDebugEnabled()) {
-            log.debug("channel inactive ：" + ctx.channel());
-        }
-        super.channelInactive(ctx);
     }
 }
