@@ -48,8 +48,7 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             Set<String> topics = cmd.getTopics().stream().map(s -> Util.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
 
             if (Command.SUBSCRIBE.equals(cmd.getEvent())) {
-                String uid = cmd.getToken();
-                ChannelManager.subscribe(ctx.channel(), topics, uid);
+                ChannelManager.subscribe(ctx.channel(), topics, cmd.getToken());
             } else if (Command.UNSUBSCRIBE.equals(cmd.getEvent())) {
                 ChannelManager.unSubscribeTopics(ctx.channel(), topics);
             } else {
@@ -77,25 +76,5 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             ChannelManager.addChannel(ctx.channel());
         }
         super.userEventTriggered(ctx, evt);
-    }
-
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-
-        if (log.isDebugEnabled()) {
-            log.debug("channel active : " + ctx.channel());
-        }
-        super.channelActive(ctx);
-    }
-
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
-        if (log.isDebugEnabled()) {
-            log.debug("channel inactive ：" + ctx.channel());
-        }
-        super.channelInactive(ctx);
     }
 }
