@@ -48,13 +48,14 @@ public class TextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketF
             Set<String> topics = cmd.getTopics().stream().map(s -> Util.buildNameSpace(cmd.getBiz(), cmd.getType(), s)).collect(Collectors.toSet());
 
             if (Command.SUBSCRIBE.equals(cmd.getEvent())) {
+                sendAnswer(ctx, Answer.builder().event(cmd.getEvent()).biz(cmd.getBiz()).type(cmd.getType()).topics(cmd.getTopics()).build());
                 ChannelManager.subscribe(ctx.channel(), topics, cmd.getToken());
             } else if (Command.UNSUBSCRIBE.equals(cmd.getEvent())) {
+                sendAnswer(ctx, Answer.builder().event(cmd.getEvent()).biz(cmd.getBiz()).type(cmd.getType()).topics(cmd.getTopics()).build());
                 ChannelManager.unSubscribeTopics(ctx.channel(), topics);
             } else {
                 return;
             }
-            sendAnswer(ctx, Answer.builder().event(cmd.getEvent()).biz(cmd.getBiz()).type(cmd.getType()).topics(cmd.getTopics()).build());
         } catch (Throwable e) {
             log.error("textFrameHandler error : ", e);
         }
