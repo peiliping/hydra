@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Slf4j
@@ -24,6 +25,8 @@ public class ChannelManager {
     private static final Map<String, ChannelBox> inProcessing = Maps.newConcurrentMap();
 
     private static final ChannelFutureListener listener = future -> removeChannel(future.channel());
+
+    private static final AtomicInteger subscribeCount = new AtomicInteger(0);
 
 
     public synchronized static void addChannelFuture(ChannelFuture channelFuture) {
@@ -55,6 +58,10 @@ public class ChannelManager {
 
     public static void subscribe(String subscribeString, long subscribeInterval) {
 
+        if (subscribeCount.get() == channelFutures.size()) {
+            return;
+        }
+
         String[] subscribeItems = null;
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
@@ -74,6 +81,7 @@ public class ChannelManager {
                     Util.sleepMS(subscribeInterval);
                 }
             }
+            subscribeCount.incrementAndGet();
             box.subscribed = true;
         }
     }
