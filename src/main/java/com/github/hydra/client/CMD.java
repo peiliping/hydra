@@ -26,7 +26,9 @@ public class CMD extends CMDUtil {
 
     static final Option HEARTBEATINTERVAL = Option.builder().longOpt("heartBeatInterval").hasArg(true).required(false).desc("心跳的间隔时间(s)").build();
 
-    static final Option UNGZIP = Option.builder().longOpt("unGzip").hasArg(false).required(false).desc("unGzip binary data").build();
+    static final Option UNGZIPBIN = Option.builder().longOpt("unGzipBin").hasArg(false).required(false).desc("unGzip binary data").build();
+
+    static final Option UNGZIPJSON = Option.builder().longOpt("unGzipJson").hasArg(false).required(false).desc("unGzip json data").build();
 
     static {
         OPTIONS.addOption(HELP).addOption(LOGLEVEL)
@@ -34,7 +36,7 @@ public class CMD extends CMDUtil {
                 .addOption(CONNECTIONS).addOption(CONNECTINTERVAL)
                 .addOption(SUBSCRIBE).addOption(SUBSCRIBEINTERVAL)
                 .addOption(HEARTBEAT).addOption(HEARTBEATINTERVAL)
-                .addOption(UNGZIP);
+                .addOption(UNGZIPBIN).addOption(UNGZIPJSON);
     }
 
     public static boolean HELP(CommandLine commandLine) {

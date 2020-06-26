@@ -22,4 +22,6 @@ public class ClientConfig {
     private String path;
 
     private boolean unCompressGzip;
+
+    private boolean unCompressJSON;
 }

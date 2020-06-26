@@ -58,7 +58,8 @@ public class Start {
                     .host(getValue(commandLine, HOST, s -> s, "127.0.0.1"))
                     .port(getValue(commandLine, PORT, Integer::parseInt, 8000))
                     .path(getValue(commandLine, PATH, s -> s, "/"))
-                    .unCompressGzip(hasOption(commandLine, UNGZIP))
+                    .unCompressGzip(hasOption(commandLine, UNGZIPBIN))
+                    .unCompressJSON(hasOption(commandLine, UNGZIPJSON))
                     .build();
             log.info(clientConfig.toString());
 
