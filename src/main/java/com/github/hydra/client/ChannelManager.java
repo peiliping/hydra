@@ -65,10 +65,7 @@ public class ChannelManager {
         String[] subscribeItems = null;
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
-            if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
-                continue;
-            }
-            if (box.subscribed) {
+            if (box == null || box.subscribed || !box.channel.isActive()) {
                 continue;
             }
             if (subscribeItems == null) {
@@ -81,8 +78,8 @@ public class ChannelManager {
                     Util.sleepMS(subscribeInterval);
                 }
             }
-            subscribeCount.incrementAndGet();
             box.subscribed = true;
+            subscribeCount.incrementAndGet();
         }
     }
 
@@ -93,7 +90,7 @@ public class ChannelManager {
         String hbStr = String.format(heartBeatString, now);
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
-            if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
+            if (box == null || !box.channel.isActive()) {
                 continue;
             }
             box.channel.writeAndFlush(new TextWebSocketFrame(hbStr));
@@ -107,7 +104,7 @@ public class ChannelManager {
         long now = Util.nowMS();
         for (int i = 0; i < channelFutures.size(); i++) {
             ChannelBox box = getChannelBox(channelFutures.get(i).channel());
-            if (box == null || !box.channel.isActive() || !box.channel.isWritable()) {
+            if (box == null || !box.channel.isActive()) {
                 continue;
             }
             if (box.subscribed) {
