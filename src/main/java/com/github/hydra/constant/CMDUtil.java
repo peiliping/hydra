@@ -13,13 +13,13 @@ public class CMDUtil {
 
     public static final Option HELP = Option.builder().longOpt("help").hasArg(false).required(false).desc("help").build();
 
-    public static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger level").build();
+    public static final Option LOGLEVEL = Option.builder().longOpt("logLevel").hasArg(true).required(false).desc("root logger level (info)").build();
 
-    public static final Option HOST = Option.builder().longOpt("host").hasArg(true).required(false).desc("ip or address").build();
+    public static final Option HOST = Option.builder().longOpt("host").hasArg(true).required(false).desc("ip or address (127.0.0.1)").build();
 
-    public static final Option PORT = Option.builder().longOpt("port").hasArg(true).required(false).desc("port").build();
+    public static final Option PORT = Option.builder().longOpt("port").hasArg(true).required(false).desc("port (8000)").build();
 
-    public static final Option PATH = Option.builder().longOpt("path").hasArg(true).required(false).desc("path").build();
+    public static final Option PATH = Option.builder().longOpt("path").hasArg(true).required(false).desc("path (/)").build();
 
 
     public static boolean HELP(CommandLine commandLine, Options options) {
