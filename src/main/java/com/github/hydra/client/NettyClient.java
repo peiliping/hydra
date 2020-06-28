@@ -97,7 +97,7 @@ public class NettyClient {
             if (future.isSuccess()) {
                 ChannelManager.addChannel(future.channel());
             } else {
-                log.error("error : ", future.cause());
+                log.error("netty connect error : ", future.cause());
             }
         });
     }

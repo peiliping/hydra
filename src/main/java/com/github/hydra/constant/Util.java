@@ -84,7 +84,7 @@ public class Util {
             gzip.write(str.getBytes("UTF-8"));
             gzip.close();
         } catch (IOException e) {
-            log.error("gzip compress error.", e);
+            log.error("gzip compress error : ", e);
         }
         return out.toByteArray();
     }
@@ -103,7 +103,7 @@ public class Util {
             }
             return out.toString();
         } catch (Exception e) {
-            log.error("unCompressGzip error : ", e);
+            log.error("un compress gzip error : ", e);
         }
         return "";
     }
