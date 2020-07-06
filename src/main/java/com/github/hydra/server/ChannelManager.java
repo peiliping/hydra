@@ -55,8 +55,9 @@ public class ChannelManager {
 
     public static void removeChannel(final Channel channel) {
 
-        unSubscribeAll(channel);
-        sessionCount.decrementAndGet();
+        if (unSubscribeAll(channel)) {
+            sessionCount.decrementAndGet();
+        }
     }
 
 
@@ -111,12 +112,12 @@ public class ChannelManager {
     }
 
 
-    public static void unSubscribeAll(final Channel channel) {
+    public static boolean unSubscribeAll(final Channel channel) {
 
         String id = channel.id().asLongText();
         SubscribeBox subscribeBox = subscribeMap.remove(id);
         if (subscribeBox == null) {
-            return;
+            return false;
         }
         subscribeBox.topics.forEach(s -> {
 
@@ -128,6 +129,7 @@ public class ChannelManager {
         if (subscribeBox.uid != null) {
             userChannel.remove(buildUidAndChannelId(subscribeBox.uid, id));
         }
+        return true;
     }
 
 
