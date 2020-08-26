@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -36,27 +35,16 @@ public class ChannelManager {
 
     private static final ChannelGroup globalGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    private static final AtomicInteger sessionCount = new AtomicInteger(0);
-
     private static final AtomicLong broadcastCount = new AtomicLong(0L);
 
-    private static final ChannelFutureListener listener = future -> removeChannel(future.channel());
+    private static final ChannelFutureListener listener = future -> unSubscribeAll(future.channel());
 
 
     public static void addChannel(final Channel channel) {
 
         if (globalGroup.add(channel)) {
             subscribeMap.putIfAbsent(channel.id().asLongText(), new SubscribeBox(channel));
-            sessionCount.incrementAndGet();
             channel.closeFuture().addListener(listener);
-        }
-    }
-
-
-    public static void removeChannel(final Channel channel) {
-
-        if (unSubscribeAll(channel)) {
-            sessionCount.decrementAndGet();
         }
     }
 
@@ -206,7 +194,9 @@ public class ChannelManager {
                         box.open = false;
                     }
                 } else {
-                    if ((now - box.lastHeartBeatTime) >= Util.MIN_1) {
+                    if ((now - box.lastHeartBeatTime) >= Util.MIN_1 * 5) {
+                        unSubscribeAll(box.channel);
+                    } else if ((now - box.lastHeartBeatTime) >= Util.MIN_1) {
                         expiredSession++;
                         if (entry.getValue().channel != null) {
                             entry.getValue().channel.close();
@@ -216,7 +206,7 @@ public class ChannelManager {
             }
         }
         log.info("session : {} , subscribe : {} , namespace : {} , user session : {} , expired session : {} , broadcast : {}",
-                 sessionCount.get(), subscribeMap.size(), nameSpace.size(), userChannel.size(), expiredSession, broadcastCount.get());
+                 globalGroup.size(), subscribeMap.size(), nameSpace.size(), userChannel.size(), expiredSession, broadcastCount.get());
     }
 
 
